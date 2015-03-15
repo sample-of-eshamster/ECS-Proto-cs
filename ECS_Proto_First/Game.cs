@@ -24,6 +24,8 @@ namespace ECS_Proto_First
         SwapChain swapChain;
         Factory factory;
 
+        AGraphics graphics;
+
         public void Run()
         {
             var form = new RenderForm("SharpDX - MiniTri Direct2D - Direct3D 10 Sample");
@@ -47,11 +49,6 @@ namespace ECS_Proto_First
 
             var d2dFactory = new SharpDX.Direct2D1.Factory();
 
-            int width = form.ClientSize.Width;
-            int height = form.ClientSize.Height;
-
-            var rectangleGeometry = new RoundedRectangleGeometry(d2dFactory, new RoundedRectangle() { RadiusX = 32, RadiusY = 32, Rect = new RectangleF(128, 128, width - 128 * 2, height - 128 * 2) });
-
             // Ignore all windows events
             factory = swapChain.GetParent<Factory>();
             factory.MakeWindowAssociation(form.Handle, WindowAssociationFlags.IgnoreAll);
@@ -62,22 +59,21 @@ namespace ECS_Proto_First
 
             Surface surface = backBuffer.QueryInterface<Surface>();
 
-
             var d2dRenderTarget = new RenderTarget(d2dFactory, surface,
                                                             new RenderTargetProperties(new PixelFormat(Format.Unknown, AlphaMode.Premultiplied)));
 
-            var solidColorBrush = new SolidColorBrush(d2dRenderTarget, Color.White);
-
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
+
+            graphics = new AGraphics(d2dFactory, d2dRenderTarget);
 
             // Main loop
             RenderLoop.Run(form, () =>
             {
                 d2dRenderTarget.BeginDraw();
                 d2dRenderTarget.Clear(Color.Black);
-                solidColorBrush.Color = new Color4(1, 1, 1, (float)Math.Abs(Math.Cos(stopwatch.ElapsedMilliseconds * .001)));
-                d2dRenderTarget.FillGeometry(rectangleGeometry, solidColorBrush, null);
+                graphics.FillRectangle(128, 128, 128, 128, new Color4(1, 1, 1, (float)(Math.Cos(stopwatch.ElapsedMilliseconds * .002) + 1) / 2f));
+                graphics.FillRectangle(384, 128, 128, 128, new Color4(1, 1, 1, (float)(Math.Cos(stopwatch.ElapsedMilliseconds * .002 + Math.PI / 2f) + 1) / 2f));
                 d2dRenderTarget.EndDraw();
 
                 swapChain.Present(0, PresentFlags.None);
